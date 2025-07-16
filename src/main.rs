@@ -1,70 +1,56 @@
-use std::{cell::RefCell, io, rc::Rc};
+use std::io::{self, Write};
 
-use ratatui::{
-    layout::Alignment,
-    style::{Color, Stylize},
-    widgets::{Block, BorderType, Paragraph},
-    Frame, Terminal,
-};
-
-use ratzilla::{
-    event::{KeyCode, KeyEvent},
-    DomBackend, WebRenderer,
-};
-
-fn main() -> io::Result<()> {
-    let backend = DomBackend::new()?;
-    let terminal = Terminal::new(backend)?;
-
-    let state = Rc::new(App::default());
-
-    let event_state = Rc::clone(&state);
-    terminal.on_key_event(move |key_event| {
-        event_state.handle_events(key_event);
-    });
-
-    let render_state = Rc::clone(&state);
-    terminal.draw_web(move |frame| {
-        render_state.render(frame);
-    });
-
-    Ok(())
-}
-
-#[derive(Default)]
 struct App {
-    counter: RefCell<u8>,
+    counter: i32,
 }
 
 impl App {
-    fn render(&self, frame: &mut Frame) {
-        let counter = self.counter.borrow();
-        let block = Block::bordered()
-            .title("ratzilla-vercel-template")
-            .title_alignment(Alignment::Center)
-            .border_type(BorderType::Rounded);
-
-        let text = format!(
-            "This is a Ratzilla template.\n\
-             Press left and right to increment and decrement the counter respectively.\n\
-             Counter: {counter}",
-        );
-
-        let paragraph = Paragraph::new(text)
-            .block(block)
-            .fg(Color::White)
-            .bg(Color::Black)
-            .centered();
-
-        frame.render_widget(paragraph, frame.area());
+    fn new() -> Self {
+        Self { counter: 0 }
     }
 
-    fn handle_events(&self, key_event: KeyEvent) {
-        let mut counter = self.counter.borrow_mut();
-        match key_event.code {
-            KeyCode::Left => *counter = counter.saturating_sub(1),
-            KeyCode::Right => *counter = counter.saturating_add(1),
-            _ => {}
+    fn handle_input(&mut self, input: &str) {
+        match input.trim() {
+            "left" => {
+                self.counter -= 1;
+                println!("Counter decreased to {}", self.counter);
+            }
+            "right" => {
+                self.counter += 1;
+                println!("Counter increased to {}", self.counter);
+            }
+            "exit" | "quit" => {
+                println!("Exiting...");
+                std::process::exit(0);
+            }
+            "help" => {
+                println!("Available commands: left, right, help, quit");
+            }
+            _ => {
+                println!("Unknown command. Type 'help' for available commands.");
+            }
         }
     }
+
+    fn run(&mut self) {
+        println!("Welcome to the CLI Engine!");
+        println!("Type 'help' to see available commands.");
+
+        loop {
+            print!("> ");
+            io::stdout().flush().unwrap(); // Flush prompt
+
+            let mut input = String::new();
+            if io::stdin().read_line(&mut input).is_ok() {
+                self.handle_input(&input);
+            } else {
+                println!("Error reading input. Try again.");
+            }
+        }
+    }
+}
+
+fn main() {
+    let mut app = App::new();
+    app.run();
 }
