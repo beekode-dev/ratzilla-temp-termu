@@ -9,42 +9,43 @@ impl App {
         Self { counter: 0 }
     }
 
-    fn handle_input(&mut self, input: &str) {
-        match input.trim() {
-            "left" => {
-                self.counter -= 1;
-                println!("Counter decreased to {}", self.counter);
-            }
-            "right" => {
-                self.counter += 1;
-                println!("Counter increased to {}", self.counter);
-            }
-            "exit" | "quit" => {
-                println!("Exiting...");
-                std::process::exit(0);
-            }
-            "help" => {
-                println!("Available commands: left, right, help, quit");
-            }
-            _ => {
-                println!("Unknown command. Type 'help' for available commands.");
-            }
-        }
-    }
-
     fn run(&mut self) {
-        println!("Welcome to the CLI Engine!");
-        println!("Type 'help' to see available commands.");
+        println!("Welcome to the CLI Counter App!");
+        println!("Commands: left, right, show, help, quit");
 
         loop {
             print!("> ");
-            io::stdout().flush().unwrap(); // Flush prompt
+            io::stdout().flush().unwrap(); // Ensure prompt is printed
 
             let mut input = String::new();
-            if io::stdin().read_line(&mut input).is_ok() {
-                self.handle_input(&input);
-            } else {
-                println!("Error reading input. Try again.");
+            if io::stdin().read_line(&mut input).is_err() {
+                println!("Failed to read input.");
+                continue;
+            }
+
+            let command = input.trim().to_lowercase();
+            match command.as_str() {
+                "left" => {
+                    self.counter -= 1;
+                    println!("Counter decreased to {}", self.counter);
+                }
+                "right" => {
+                    self.counter += 1;
+                    println!("Counter increased to {}", self.counter);
+                }
+                "show" => {
+                    println!("Current counter value: {}", self.counter);
+                }
+                "help" => {
+                    println!("Available commands:\n  left  - decrement\n  right - increment\n  show  - display counter\n  help  - show this message\n  quit  - exit the app");
+                }
+                "quit" | "exit" => {
+                    println!("Goodbye!");
+                    break;
+                }
+                _ => {
+                    println!("Unknown command. Type 'help' for available commands.");
+                }
             }
         }
     }
